@@ -34,4 +34,4 @@ _Thanks ChatGPT for helping me out in this project as it was my first C# project
 
 ## License
 
-[MIT](./LICENSE) License © 2024 [Fefe_du_973]([https://github.com/Daydreamer-riri](https://github.com/Fefedu973/)
+[MIT](./LICENSE) License © 2024 [Fefe_du_973](https://github.com/Fefedu973/)
