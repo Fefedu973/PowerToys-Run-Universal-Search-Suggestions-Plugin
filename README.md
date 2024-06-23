@@ -1,5 +1,15 @@
-# PowerToys-Run-Google-Search-Suggestions-Plugin
+<h1 align="center"> Google Search Suggestion PowerToys Run Plugin</h1>
 
+[<p align="center">]()
+![GitHub all releases](https://img.shields.io/github/downloads/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/total?style=for-the-badge)
+![Discord](https://img.shields.io/discord/807892248935006208?style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub repo size](https://img.shields.io/github/repo-size/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+[<p align="center">]()
+![GitHub forks](https://img.shields.io/github/forks/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub Repo stars](https://img.shields.io/github/stars/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+---
 This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powertoys/run) plugin that adds google search suggestions when searching something.
 
 ## Preview
