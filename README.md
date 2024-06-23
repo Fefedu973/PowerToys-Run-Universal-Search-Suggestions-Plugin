@@ -1,4 +1,5 @@
-# PowerToys-Run-Google-Search-Suggestions-Plugin
+<h1 align="center"> Google Search Suggestion PowerToys Run Plugin</h1>
+
 [<p align="center">]()
 ![GitHub all releases](https://img.shields.io/github/downloads/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/total?style=for-the-badge)
 ![Discord](https://img.shields.io/discord/807892248935006208?style=for-the-badge)
