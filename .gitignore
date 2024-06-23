@@ -4,6 +4,9 @@
 #ignore /src/obj directory in gitignore
 /src/obj
 
+#ignore /src/out directory in gitignore
+/src/out
+
 #ignore /src/.vs directory in gitignore
 /src/.vs
 
