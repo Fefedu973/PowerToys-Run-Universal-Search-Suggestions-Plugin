@@ -8,12 +8,26 @@ using System.Xml.Linq;
 using Wox.Plugin;
 using Wox.Plugin.Logger;
 using System.Reflection;
+using static Microsoft.PowerToys.Settings.UI.Library.PluginAdditionalOption;
+
 
 namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 {
     public class Main : IPlugin, IPluginI18n, IContextMenu, ISettingProvider, IReloadable, IDisposable, IDelayedExecutionPlugin
     {
         private const string SettingOldApi = nameof(SettingOldApi);
+
+        private const string SettingSelectedSearchEngine = nameof(SettingSelectedSearchEngine);
+
+        //define the search engines list
+
+        private static readonly string[] searchEngines = new string[] { "Google", "Bing", "DuckDuckGo", "Yahoo", "Baidu", "Yandex", "Startpage", "Qwant", "Ecosia", "Brave", "Ask", "Naver", "Seznam" };
+
+        //define the search engines URLs
+
+        private static readonly string[] searchEnginesUrls = new string[] { "https://www.google.com/search?q=", "https://www.bing.com/search?q=", "https://duckduckgo.com/?q=", "https://search.yahoo.com/search?p=", "https://www.baidu.com/s?wd=", "https://yandex.com/search/?text=", "https://www.startpage.com/do/dsearch?query=", "https://www.qwant.com/?q=", "https://www.ecosia.org/search?q=", "https://search.brave.com/search?q=", "https://www.ask.com/web?q=", "https://search.naver.com/search.naver?query=", "https://search.seznam.cz/?q=" };
+
+        private int _selectedSearchEngine;
 
         // current value of the setting
         private bool _useOldApi;
@@ -31,7 +45,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
         public string Description => Properties.Resources.plugin_description;
 
         // TODO: remove dash from ID below and inside plugin.json
-        public static string PluginID => "2864bc53a8234d279841369aaf7c1760";
+        public static string PluginID => "64861420-a0ca-442d-ae1c-35054e15a4b7";
 
         // TODO: add additional options (optional)
         public IEnumerable<PluginAdditionalOption> AdditionalOptions => new List<PluginAdditionalOption>()
@@ -42,11 +56,27 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 DisplayLabel = "Use the old Google API (no images)",
                 Value = false,
             },
+            new PluginAdditionalOption()
+            {
+                Key = SettingSelectedSearchEngine,
+                DisplayDescription = "Change the search engine you will be redirected to when you select a suggestion",
+                DisplayLabel = "Selected Search Engine",
+                PluginOptionType = AdditionalOptionType.Combobox,
+                ComboBoxOptions = searchEngines.ToList(),
+                ComboBoxValue = 0,
+                ComboBoxItems = searchEngines.Select((val, idx) =>
+                {
+                    return new KeyValuePair<string, string>(val, idx.ToString());
+                }).ToList()
+            }
         };
 
         public void UpdateSettings(PowerLauncherPluginSettings settings)
         {
             _useOldApi = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingOldApi)?.Value ?? false;
+
+            _selectedSearchEngine = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSelectedSearchEngine)?.ComboBoxValue ?? 0;           
+
         }
 
         // TODO: return context menus for each Result (optional)
@@ -192,7 +222,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
-                            FileName = $"https://www.google.com/search?q={Uri.EscapeDataString(suggestion)}",
+                            FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(suggestion)}",
                             UseShellExecute = true,
                         });
                         return true;
@@ -266,7 +296,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                                 {
                                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                                     {
-                                        FileName = $"https://www.google.com/search?q={Uri.EscapeDataString(simpleTitle)}",
+                                        FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(simpleTitle)}",
                                         UseShellExecute = true,
                                     });
                                     return true;
@@ -301,7 +331,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                             {
                                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                                 {
-                                    FileName = $"https://www.google.com/search?q={Uri.EscapeDataString(title)}",
+                                    FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
                                     UseShellExecute = true,
                                 });
                                 return true;
