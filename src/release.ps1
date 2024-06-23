@@ -1,11 +1,11 @@
 Push-Location
 Set-Location $PSScriptRoot
 
-$name = 'PowerToys_Run_Google_Search_Suggestions_Plugin'
+$name = 'GoogleSearchSuggestions'
 $assembly = "Community.PowerToys.Run.Plugin.$name"
 $version = "v$((Get-Content ./plugin.json | ConvertFrom-Json).Version)"
 $archs = @('x64', 'arm64')
-$tempDir = './out/temp'
+$tempDir = './out/GoogleSearchSuggestions'
 
 git tag $version
 git push --tags
