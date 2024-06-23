@@ -1,0 +1,11 @@
+#ignore /src/bin directory in gitignore
+/src/bin
+
+#ignore /src/obj directory in gitignore
+/src/obj
+
+#ignore /src/.vs directory in gitignore
+/src/.vs
+
+#ignore /src/.editorconfig file in gitignore
+/src/.editorconfig

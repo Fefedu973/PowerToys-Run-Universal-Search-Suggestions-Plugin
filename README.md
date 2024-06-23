@@ -1,4 +1,5 @@
 # PowerToys-Run-Google-Search-Suggestions-Plugin
+
 This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powertoys/run) plugin that adds google search suggestions when searching something.
 
 ## Preview
@@ -7,7 +8,7 @@ This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powert
 
 ## Requirements
 
-- PowerToys
+- PowerToys v0.81.1
 
 ## Installation
 
@@ -24,7 +25,7 @@ This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powert
 
 - This project can only be completed under the guidance of [this article](https://conductofcode.io/post/creating-custom-powertoys-run-plugins/). Thanks to @hlaueriksson for his great work.
 
-- This project has been greatly simplified and accelerated in its realization by [this visual studio template](https://github.com/8LWXpg/PowerToysRun-PluginTemplate) for creating PowerToys plugins. Thanks to [@8LWXpg](https://github.com/8LWXpg)  for his great work.
+- This project has been greatly simplified and accelerated in its realization by [this visual studio template](https://github.com/8LWXpg/PowerToysRun-PluginTemplate) for creating PowerToys plugins. Thanks to [@8LWXpg](https://github.com/8LWXpg) for his great work.
 
 ## Thanks
 
