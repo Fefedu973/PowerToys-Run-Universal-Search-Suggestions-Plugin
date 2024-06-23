@@ -8,7 +8,7 @@
 ![GitHub forks](https://img.shields.io/github/forks/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
 ![GitHub Repo stars](https://img.shields.io/github/stars/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
-
+---
 This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powertoys/run) plugin that adds google search suggestions when searching something.
 
 ## Preview
