@@ -5,7 +5,7 @@
     "IsGlobal": true,
     "Name": "Google Search Suggestions",
     "Author": "Fefe_du_973",
-    "Version": "1.1.0",
+    "Version": "1.2.0",
     "Language": "csharp",
     "Website": "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin",
     "ExecuteFileName": "Community.PowerToys.Run.Plugin.GoogleSearchSuggestions.dll",
