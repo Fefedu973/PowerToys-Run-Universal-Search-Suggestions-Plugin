@@ -67,7 +67,6 @@
         <None Include="plugin.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
         <PackageReference Include="Svg" Version="3.4.7" />
         <None Update="Images\*.png">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
