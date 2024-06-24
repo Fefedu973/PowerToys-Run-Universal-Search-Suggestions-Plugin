@@ -10,5 +10,6 @@
     "Website": "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin",
     "ExecuteFileName": "Community.PowerToys.Run.Plugin.GoogleSearchSuggestions.dll",
     "IcoPathDark": "Images\\Google_Search_Suggestions_Plugin.dark.png",
-    "IcoPathLight": "Images\\Google_Search_Suggestions_Plugin.light.png"
+    "IcoPathLight": "Images\\Google_Search_Suggestions_Plugin.light.png",
+    "DynamicLoading": true
 }

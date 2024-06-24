@@ -9,28 +9,102 @@ using Wox.Plugin;
 using Wox.Plugin.Logger;
 using System.Reflection;
 using static Microsoft.PowerToys.Settings.UI.Library.PluginAdditionalOption;
+using Svg;
+using System.Text;
+using System.Drawing.Imaging;
 
 
 namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 {
     public class Main : IPlugin, IPluginI18n, IContextMenu, ISettingProvider, IReloadable, IDisposable, IDelayedExecutionPlugin
     {
-        private const string SettingOldApi = nameof(SettingOldApi);
-
         private const string SettingSelectedSearchEngine = nameof(SettingSelectedSearchEngine);
+
+        private const string SettingSuggestionProvider = nameof(SettingSuggestionProvider);
 
         //define the search engines list
 
-        private static readonly string[] searchEngines = new string[] { "Google", "Bing", "DuckDuckGo", "Yahoo", "Baidu", "Yandex", "Startpage", "Qwant", "Ecosia", "Brave", "Ask", "Naver", "Seznam" };
+        private static readonly string[] searchEngines = new string[] {
+  "Google",
+  "Bing",
+  "Yahoo",
+  "Baidu",
+  "Yandex",
+  "DuckDuckGo",
+  "Naver",
+  "Ask",
+  "Ecosia",
+  "Brave",
+  "Qwant",
+  "Startpage",
+  "SwissCows",
+  "Dogpile",
+  "Gibiru",
+  "Mojeek",
+  "MetaGer",
+  "ZapMeta",
+  "Search Encrypt",
+  "OneSearch",
+  "Ekoru",
+};
+
+
 
         //define the search engines URLs
 
-        private static readonly string[] searchEnginesUrls = new string[] { "https://www.google.com/search?q=", "https://www.bing.com/search?q=", "https://duckduckgo.com/?q=", "https://search.yahoo.com/search?p=", "https://www.baidu.com/s?wd=", "https://yandex.com/search/?text=", "https://www.startpage.com/do/dsearch?query=", "https://www.qwant.com/?q=", "https://www.ecosia.org/search?q=", "https://search.brave.com/search?q=", "https://www.ask.com/web?q=", "https://search.naver.com/search.naver?query=", "https://search.seznam.cz/?q=" };
+        private static readonly string[] searchEnginesUrls = new string[] {
+  "https://www.google.com/search?q=",
+  "https://www.bing.com/search?q=",
+  "https://search.yahoo.com/search?p=",
+  "https://www.baidu.com/s?wd=",
+  "https://yandex.com/search/?text=",
+  "https://duckduckgo.com/?q=",
+  "https://search.naver.com/search.naver?query=",
+  "https://www.ask.com/web?q=",
+  "https://www.ecosia.org/search?q=",
+  "https://search.brave.com/search?q=",
+  "https://www.qwant.com/?q=",
+  "https://www.startpage.com/do/dsearch?query=",
+  "https://swisscows.com/web?query=",
+  "https://www.dogpile.com/serp?q=",
+  "https://gibiru.com/results.html?q=",
+  "https://www.mojeek.com/search?q=",
+  "https://metager.org/meta/meta.ger3?eingabe=",
+  "https://www.zapmeta.com/search?q=",
+  "https://www.searchencrypt.com/search?q=",
+  "https://www.onesearch.com/yhs/search?q=",
+  "https://ekoru.org/search?q=",
+};
+
+        private static readonly string[] searchEnginesSuggestions = new string[] {
+            "https://www.google.com/complete/search?client=gws-wiz&q=",
+            "https://www.google.com/complete/search?output=toolbar&q=",
+            "https://www.bingapis.com/api/v7/suggestions?appid=6D0A9B8C5100E9ECC7E11A104ADD76C10219804B&q=",
+            "https://sugg.search.yahoo.net/sg/?output=json&nresults=10&command=",
+            "https://duckduckgo.com/ac/?type=json&q=",
+            "https://ac.ecosia.org/?q=",
+            "https://search.brave.com/api/suggest?rich=true&q=",
+            "https://api.qwant.com/v3/suggest?q=",
+            "https://api.swisscows.com/suggest?query=",
+            };
+
+        private static readonly string[] searchEnginesSuggestionsName = new string[] {
+            "Google",
+            "Old Google api",
+            "Bing",
+            "Yahoo",
+            "DuckDuckGo",
+            "Ecosia",
+            "Brave",
+            "Qwant",
+            "SwissCows",
+        };
+
 
         private int _selectedSearchEngine;
 
         // current value of the setting
-        private bool _useOldApi;
+        private int _selectedApi;
 
         private PluginInitContext _context;
 
@@ -52,12 +126,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
         {
             new PluginAdditionalOption()
             {
-                Key = SettingOldApi,
-                DisplayLabel = "Use the old Google API (no images)",
-                Value = false,
-            },
-            new PluginAdditionalOption()
-            {
                 Key = SettingSelectedSearchEngine,
                 DisplayDescription = "Change the search engine you will be redirected to when you select a suggestion",
                 DisplayLabel = "Selected Search Engine",
@@ -68,12 +136,26 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 {
                     return new KeyValuePair<string, string>(val, idx.ToString());
                 }).ToList()
+            },
+            //select suggestion provider
+            new PluginAdditionalOption()
+            {
+                Key = SettingSuggestionProvider,
+                DisplayDescription = "Select the provider for the suggestions",
+                DisplayLabel = "Selected Suggestion Provider",
+                PluginOptionType = AdditionalOptionType.Combobox,
+                ComboBoxOptions = searchEngines.ToList(),
+                ComboBoxValue = 0,
+                ComboBoxItems = searchEnginesSuggestionsName.Select((val, idx) =>
+                {
+                    return new KeyValuePair<string, string>(val, idx.ToString());
+                }).ToList()
             }
         };
 
         public void UpdateSettings(PowerLauncherPluginSettings settings)
         {
-            _useOldApi = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingOldApi)?.Value ?? false;
+            _selectedApi = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSuggestionProvider)?.ComboBoxValue ?? 0;
 
             _selectedSearchEngine = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSelectedSearchEngine)?.ComboBoxValue ?? 0;           
 
@@ -156,9 +238,14 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             }
 
             var searchTerm = Uri.EscapeDataString(query.Search);
-            var requestUri = _useOldApi
-                ? $"https://www.google.com/complete/search?output=toolbar&q={searchTerm}"
-                : $"https://www.google.com/complete/search?q={searchTerm}&client=gws-wiz";
+
+            //select the url based on the selected api
+            var requestUri = searchEnginesSuggestions[_selectedApi] + searchTerm;
+
+
+
+            //? $"https://www.google.com/complete/search?output=toolbar&q={searchTerm}"
+            //: $"https://www.google.com/complete/search?q={searchTerm}&client=gws-wiz";
 
             try
             {
@@ -168,15 +255,46 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 {
                     var response = await client.GetStringAsync(requestUri);
 
-                    if (_useOldApi)
+                    if (response != null)
                     {
-                        results.AddRange(ParseOldApiResponse(response));
+                        switch (_selectedApi)
+                        {
+                            case 0:
+                                results.AddRange(await ParseNewApiResponse(response));
+                                break;
+                            case 1:
+                                results.AddRange(ParseOldApiResponse(response));
+                                break;
+                            case 2:
+                                results.AddRange(ParseBingApiResponse(response));
+                                break;
+                            case 3:
+                                results.AddRange(ParseYahooApiResponse(response));
+                                break;
+                            case 4:
+                                results.AddRange(ParseDuckDuckGoApiResponse(response));
+                                break;
+                            case 5:
+                                results.AddRange(ParseEcosiaApiResponse(response));
+                                break;
+                            case 6:
+                                results.AddRange(await ParseBraveApiResponse(response));
+                                break;
+                            case 7:
+                                results.AddRange(ParseQwantApiResponse(response));
+                                break;
+                            case 8:
+                                results.AddRange(ParseSwissCowsApiResponse(response));
+                                break;
+                            default:
+                                results.AddRange(ParseOldApiResponse(response));
+                                break;
+                        }
+                        return results;
                     }
-                    else
-                    {
-                        results.AddRange(await ParseNewApiResponse(response));
-                    }
+
                 }
+                    
             }
             catch (Exception ex)
             {
@@ -189,6 +307,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     //report issue to GitHub
                     Action = action =>
                     {
+                        //copy the error message to the clipboard
+                        System.Windows.Clipboard.SetText("Failed to query Google Search Suggestions API: " + ex.Message);
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
                             FileName = "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/issues/new",
@@ -200,6 +320,305 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             }
             return results;
         }
+
+        private IEnumerable<Result> ParseBingApiResponse(string response)
+        {
+            var results = new List<Result>();
+
+            var json = JsonDocument.Parse(response);
+            var suggestions = json.RootElement.GetProperty("suggestionGroups")[0].GetProperty("searchSuggestions");
+
+            foreach (var suggestion in suggestions.EnumerateArray())
+            {
+                var title = suggestion.GetProperty("displayText").GetString();
+
+                results.Add(new Result
+                {
+                    Title = title,
+                    SubTitle = "",
+                    QueryTextDisplay = title,
+                    IcoPath = _iconPath,
+                    Action = action =>
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
+                            UseShellExecute = true,
+                        });
+                        return true;
+                    },
+                });
+            }
+
+            return results;
+        }
+
+        private IEnumerable<Result> ParseYahooApiResponse(string response)
+        {
+            var results = new List<Result>();
+
+            var json = JsonDocument.Parse(response);
+            var suggestions = json.RootElement.GetProperty("gossip").GetProperty("results");
+
+            foreach (var suggestion in suggestions.EnumerateArray())
+            {
+                var title = suggestion.GetProperty("key").GetString();
+
+                results.Add(new Result
+                {
+                    Title = title,
+                    SubTitle = "",
+                    QueryTextDisplay = title,
+                    IcoPath = _iconPath,
+                    Action = action =>
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
+                            UseShellExecute = true,
+                        });
+                        return true;
+                    },
+                });
+            }
+
+            return results;
+        }
+
+        private IEnumerable<Result> ParseDuckDuckGoApiResponse(string response)
+        {
+            var results = new List<Result>();
+
+            using (var doc = JsonDocument.Parse(response))
+            {
+                var root = doc.RootElement;
+                foreach (var element in root.EnumerateArray())
+                {
+                    var phrase = element.GetProperty("phrase").GetString();
+                    if (!string.IsNullOrEmpty(phrase))
+                    {
+                        results.Add(new Result
+                        {
+                            Title = phrase,
+                            SubTitle = "",
+                            IcoPath = _iconPath,
+                            Action = action =>
+                            {
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(phrase)}",
+                                    UseShellExecute = true,
+                                });
+                                return true;
+                            },
+                        });
+                    }
+                }
+            }
+
+            return results;
+        }
+
+
+        private IEnumerable<Result> ParseEcosiaApiResponse(string response)
+        {
+            var results = new List<Result>();
+
+            using (var doc = JsonDocument.Parse(response))
+            {
+                var root = doc.RootElement;
+                var suggestions = root.GetProperty("suggestions").EnumerateArray();
+                foreach (var suggestion in suggestions)
+                {
+                    var phrase = suggestion.GetString();
+                    if (!string.IsNullOrEmpty(phrase))
+                    {
+                        results.Add(new Result
+                        {
+                            Title = phrase,
+                            SubTitle = "",
+                            IcoPath = _iconPath, // Assurez-vous que _iconPath est initialisé correctement
+                            Action = action =>
+                            {
+                                // Remplacez "searchEnginesUrls[_selectedSearchEngine]" par l'URL d'Ecosia si nécessaire
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(phrase)}",
+                                    UseShellExecute = true,
+                                });
+                                return true;
+                            },
+                        });
+                    }
+                }
+            }
+
+            return results;
+        }
+
+
+        private async Task<IEnumerable<Result>> ParseBraveApiResponse(string response)
+        {
+            var results = new List<Result>();
+                using (JsonDocument document = JsonDocument.Parse(response))
+                {
+                    JsonElement root = document.RootElement;
+                    JsonElement searchResults = root[1];
+
+                    foreach (JsonElement result in searchResults.EnumerateArray())
+                    {
+                        if (result.TryGetProperty("is_entity", out JsonElement isEntity) && isEntity.GetBoolean())
+                        {
+                            string title = result.GetProperty("name").GetString();
+                            string description = result.GetProperty("desc").GetString();
+
+                        //test if url is present
+                        if (result.TryGetProperty("img", out JsonElement urlElement))
+                        {
+                            string url = urlElement.GetString();
+
+                            string imagePath = await DownloadImageAsync(url);
+
+                            results.Add(new Result
+                            {
+                                Title = title,
+                                SubTitle = description,
+                                IcoPath = imagePath,
+                                Action = action =>
+                                {
+                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                    {
+                                        FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
+                                        UseShellExecute = true,
+                                    });
+                                    return true;
+                                },
+                            });
+
+                        }
+                        else
+                        {
+                            results.Add(new Result
+                            {
+                                Title = title,
+                                SubTitle = description,
+                                IcoPath = _iconPath,
+                                Action = action =>
+                                {
+                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                    {
+                                        FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
+                                        UseShellExecute = true,
+                                    });
+                                    return true;
+                                }, 
+                            });
+                        }
+
+                        }
+                        else
+                        {
+                            string title = result.GetProperty("q").GetString();
+
+                            results.Add(new Result
+                            {
+                                Title = title,
+                                SubTitle = "",
+                                IcoPath = _iconPath,
+                                Action = action =>
+                                {
+                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                    {
+                                        FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
+                                        UseShellExecute = true,
+                                    });
+                                    return true;
+                                },
+                            });
+                        }
+
+                    }
+            }
+
+            return results;
+        }
+
+
+
+        private IEnumerable<Result> ParseQwantApiResponse(string response)
+        {
+            var results = new List<Result>();
+
+            using (var doc = JsonDocument.Parse(response))
+            {
+                var items = doc.RootElement.GetProperty("data").GetProperty("items").EnumerateArray();
+                foreach (var item in items)
+                {
+                    var value = item.GetProperty("value").GetString();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        results.Add(new Result
+                        {
+                            Title = value,
+                            SubTitle = "",
+                            IcoPath = _iconPath, // Assurez-vous que _iconPath est initialisé correctement
+                            Action = action =>
+                            {
+                                // Remplacez "searchEnginesUrls[_selectedSearchEngine]" par l'URL de Qwant si nécessaire
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(value)}",
+                                    UseShellExecute = true,
+                                });
+                                return true;
+                            },
+                        });
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        private IEnumerable<Result> ParseSwissCowsApiResponse(string response)
+        {
+            var results = new List<Result>();
+
+            using (var doc = JsonDocument.Parse(response))
+            {
+                var suggestions = doc.RootElement.EnumerateArray();
+                foreach (var suggestion in suggestions)
+                {
+                    var phrase = suggestion.GetString();
+                    if (!string.IsNullOrEmpty(phrase))
+                    {
+                        results.Add(new Result
+                        {
+                            Title = phrase,
+                            SubTitle = "",
+                            IcoPath = _iconPath, // Assurez-vous que _iconPath est initialisé correctement
+                            Action = action =>
+                            {
+                                // Remplacez "searchEnginesUrls[_selectedSearchEngine]" par l'URL de Swisscows si nécessaire
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(phrase)}",
+                                    UseShellExecute = true,
+                                });
+                                return true;
+                            },
+                        });
+                    }
+                }
+            }
+
+            return results;
+        }
+
+
+
+
+
 
         private IEnumerable<Result> ParseOldApiResponse(string response)
         {
@@ -216,7 +635,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 results.Add(new Result
                 {
                     Title = suggestion,
-                    SubTitle = "Search for " + suggestion,
+                    SubTitle = "",
                     IcoPath = _iconPath,
                     Action = action =>
                     {
@@ -254,6 +673,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     //report issue to GitHub
                     Action = action =>
                     {
+                        //copy error to clipboard
+                        System.Windows.Clipboard.SetText("Failed to parse Google Search Suggestions API response: JSON data not found");
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
                             FileName = "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/issues/new",
@@ -351,6 +772,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     //report issue to GitHub
                     Action = action =>
                     {
+                        //copy error to clipboard
+                        System.Windows.Clipboard.SetText($"Failed to parse Google Search Suggestions API response: {ex.Message}");
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
                             FileName = "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/issues/new",
@@ -394,12 +817,29 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 
                         Directory.CreateDirectory(path);
 
-                        string randomFileName = Path.Combine(path, Guid.NewGuid().ToString() + ".png");
+                        string streamFileTypeName = response.Content.Headers.ContentType.MediaType;
+
+                        string randomFileName = Path.Combine(path, Guid.NewGuid().ToString() + "." + streamFileTypeName.Split('/')[1]);
 
                         using (var stream = await response.Content.ReadAsStreamAsync())
                         using (var fileStream = File.Create(randomFileName))
                         {
                             await stream.CopyToAsync(fileStream);
+                        }
+
+                        // Convert the image to PNG if it is an SVG using SkiaSharp and delete the old image
+                        if (streamFileTypeName == "image/svg+xml")
+                        {
+                            var byteArray = Encoding.ASCII.GetBytes(File.ReadAllText(randomFileName));
+                            using (var svgstream = new MemoryStream(byteArray))
+                            {
+                                var svgDocument = SvgDocument.Open<SvgDocument>(svgstream);
+                                var bitmap = svgDocument.Draw();
+                                var file = Path.Combine(path, Guid.NewGuid().ToString() + ".png");
+                                bitmap.Save(file, ImageFormat.Png);
+                                randomFileName = file;
+                            }
+
                         }
 
                         return randomFileName;
@@ -417,6 +857,9 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 return null;
             }
         }
+
+
+
 
         private void PurgeImagesFolder()
         {

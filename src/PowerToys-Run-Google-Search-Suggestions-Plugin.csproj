@@ -12,6 +12,8 @@
         <Product></Product>
         <Authors></Authors>
         <RepositoryUrl></RepositoryUrl>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -43,6 +45,10 @@
         <Reference Include="Wox.Plugin">
             <HintPath>.\Lib\Wox.Plugin.dll</HintPath>
         </Reference>
+        <Reference Include="Svg">
+            <HintPath>.\Lib\Svg.dll</HintPath>
+            <Private>True</Private>
+            </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -61,6 +67,8 @@
         <None Include="plugin.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+        <PackageReference Include="Svg" Version="3.4.7" />
         <None Update="Images\*.png">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
