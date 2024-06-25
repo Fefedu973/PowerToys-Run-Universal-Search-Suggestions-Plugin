@@ -9,8 +9,10 @@
 ![GitHub forks](https://img.shields.io/github/forks/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
 ![GitHub Repo stars](https://img.shields.io/github/stars/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+
 ---
-This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powertoys/run) plugin that adds google search suggestions when searching something.
+
+[<p align="center">]()This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powertoys/run) plugin that adds google search suggestions when searching something.
 
 ## Preview
 
@@ -32,6 +34,7 @@ This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powert
 - The default keyword for triggering the plugin is `s` but it should be triggered everytime by default.
 - You can change the search engine that you are redirected to.
 - - Supported browsers: Google, Bing, Yahoo, Baidu, Yandex, DuckDuckGo, Naver, Ask, Ecosia, Brave, Qwant, Startpage, Swisscows
+- You can set a custom search engine to be redirected to
 - You can change the search suggestion provider. That's right, not just Google!
 - - Supported suggestions providers: Google (rich content and classic), Bing, Yahoo, DuckDuckGo, Ecosia, Brave (rich content), Qwant, Swisscows
 

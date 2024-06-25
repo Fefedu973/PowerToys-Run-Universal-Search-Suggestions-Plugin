@@ -8,11 +8,10 @@ using System.Xml.Linq;
 using Wox.Plugin;
 using Wox.Plugin.Logger;
 using System.Reflection;
-using static Microsoft.PowerToys.Settings.UI.Library.PluginAdditionalOption;
 using Svg;
 using System.Text;
 using System.Drawing.Imaging;
-
+using static Microsoft.PowerToys.Settings.UI.Library.PluginAdditionalOption;
 
 namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 {
@@ -20,61 +19,61 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
     {
         private const string SettingSelectedSearchEngine = nameof(SettingSelectedSearchEngine);
 
+        private const string CustomSearchEngine = nameof(CustomSearchEngine);
+
         private const string SettingSuggestionProvider = nameof(SettingSuggestionProvider);
 
-        //define the search engines list
+        private string _customSearchEngineUrl;
 
         private static readonly string[] searchEngines = new string[] {
-  "Google",
-  "Bing",
-  "Yahoo",
-  "Baidu",
-  "Yandex",
-  "DuckDuckGo",
-  "Naver",
-  "Ask",
-  "Ecosia",
-  "Brave",
-  "Qwant",
-  "Startpage",
-  "SwissCows",
-  "Dogpile",
-  "Gibiru",
-  "Mojeek",
-  "MetaGer",
-  "ZapMeta",
-  "Search Encrypt",
-  "OneSearch",
-  "Ekoru",
-};
+            "Google",
+            "Bing",
+            "Yahoo",
+            "Baidu",
+            "Yandex",
+            "DuckDuckGo",
+            "Naver",
+            "Ask",
+            "Ecosia",
+            "Brave",
+            "Qwant",
+            "Startpage",
+            "SwissCows",
+            "Dogpile",
+            "Gibiru",
+            "Mojeek",
+            "MetaGer",
+            "ZapMeta",
+            "Search Encrypt",
+            "OneSearch",
+            "Ekoru",
+            "Custom",
+        };
 
-
-
-        //define the search engines URLs
-
-        private static readonly string[] searchEnginesUrls = new string[] {
-  "https://www.google.com/search?q=",
-  "https://www.bing.com/search?q=",
-  "https://search.yahoo.com/search?p=",
-  "https://www.baidu.com/s?wd=",
-  "https://yandex.com/search/?text=",
-  "https://duckduckgo.com/?q=",
-  "https://search.naver.com/search.naver?query=",
-  "https://www.ask.com/web?q=",
-  "https://www.ecosia.org/search?q=",
-  "https://search.brave.com/search?q=",
-  "https://www.qwant.com/?q=",
-  "https://www.startpage.com/do/dsearch?query=",
-  "https://swisscows.com/web?query=",
-  "https://www.dogpile.com/serp?q=",
-  "https://gibiru.com/results.html?q=",
-  "https://www.mojeek.com/search?q=",
-  "https://metager.org/meta/meta.ger3?eingabe=",
-  "https://www.zapmeta.com/search?q=",
-  "https://www.searchencrypt.com/search?q=",
-  "https://www.onesearch.com/yhs/search?q=",
-  "https://ekoru.org/search?q=",
-};
+        private static string[] searchEnginesUrls = new string[] {
+            "https://www.google.com/search?q=",
+            "https://www.bing.com/search?q=",
+            "https://search.yahoo.com/search?p=",
+            "https://www.baidu.com/s?wd=",
+            "https://yandex.com/search/?text=",
+            "https://duckduckgo.com/?q=",
+            "https://search.naver.com/search.naver?query=",
+            "https://www.ask.com/web?q=",
+            "https://www.ecosia.org/search?q=",
+            "https://search.brave.com/search?q=",
+            "https://www.qwant.com/?q=",
+            "https://www.startpage.com/do/dsearch?query=",
+            "https://swisscows.com/web?query=",
+            "https://www.dogpile.com/serp?q=",
+            "https://gibiru.com/results.html?q=",
+            "https://www.mojeek.com/search?q=",
+            "https://metager.org/meta/meta.ger3?eingabe=",
+            "https://www.zapmeta.com/search?q=",
+            "https://www.searchencrypt.com/search?q=",
+            "https://www.onesearch.com/yhs/search?q=",
+            "https://ekoru.org/search?q=",
+            string.Empty
+        };
 
         private static readonly string[] searchEnginesSuggestions = new string[] {
             "https://www.google.com/complete/search?client=gws-wiz&q=",
@@ -86,7 +85,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             "https://search.brave.com/api/suggest?rich=true&q=",
             "https://api.qwant.com/v3/suggest?q=",
             "https://api.swisscows.com/suggest?query=",
-            };
+        };
 
         private static readonly string[] searchEnginesSuggestionsName = new string[] {
             "Google",
@@ -100,10 +99,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             "SwissCows",
         };
 
-
         private int _selectedSearchEngine;
 
-        // current value of the setting
         private int _selectedApi;
 
         private PluginInitContext _context;
@@ -118,10 +115,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 
         public string Description => Properties.Resources.plugin_description;
 
-        // TODO: remove dash from ID below and inside plugin.json
         public static string PluginID => "64861420-a0ca-442d-ae1c-35054e15a4b7";
 
-        // TODO: add additional options (optional)
         public IEnumerable<PluginAdditionalOption> AdditionalOptions => new List<PluginAdditionalOption>()
         {
             new PluginAdditionalOption()
@@ -137,7 +132,15 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     return new KeyValuePair<string, string>(val, idx.ToString());
                 }).ToList()
             },
-            //select suggestion provider
+            new PluginAdditionalOption()
+            {
+                Key = CustomSearchEngine,
+                DisplayDescription = "Enter the URL of the custom search engine (only if Custom is selected). The search term will be appended to the end of the URL.",
+                DisplayLabel = "Custom Search Engine URL",
+                PluginOptionType = AdditionalOptionType.Textbox,
+                TextValue = "",
+                PlaceholderText = "eg. https://www.example.com/search?q="
+            },
             new PluginAdditionalOption()
             {
                 Key = SettingSuggestionProvider,
@@ -157,24 +160,24 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
         {
             _selectedApi = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSuggestionProvider)?.ComboBoxValue ?? 0;
 
-            _selectedSearchEngine = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSelectedSearchEngine)?.ComboBoxValue ?? 0;           
+            _selectedSearchEngine = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSelectedSearchEngine)?.ComboBoxValue ?? 0;
 
+            _customSearchEngineUrl = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == CustomSearchEngine)?.TextValue ?? string.Empty;
+
+            searchEnginesUrls = searchEnginesUrls.Take(searchEnginesUrls.Length - 1).Concat(new string[] { _customSearchEngineUrl }).ToArray();
         }
 
-        // TODO: return context menus for each Result (optional)
         public List<ContextMenuResult> LoadContextMenus(Result selectedResult)
         {
             return new List<ContextMenuResult>(0);
         }
 
-        // TODO: return query results
         public List<Result> Query(Query query)
         {
             ArgumentNullException.ThrowIfNull(query);
 
             var results = new List<Result>();
 
-            // empty query
             if (string.IsNullOrEmpty(query.Search))
             {
                 results.Add(new Result
@@ -190,18 +193,15 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 });
                 return results;
             }
-
             return results;
         }
 
-        // TODO: return delayed query results (optional)
         public List<Result> Query(Query query, bool delayedExecution)
         {
             ArgumentNullException.ThrowIfNull(query);
 
             var results = new List<Result>();
 
-            // empty query
             if (string.IsNullOrEmpty(query.Search))
             {
                 results.Add(new Result
@@ -217,7 +217,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 });
                 return results;
             }
-
             var task = QueryAsync(query, delayedExecution);
             task.Wait();
             results.AddRange(task.Result);
@@ -231,7 +230,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 
             var results = new List<Result>();
 
-            // empty query
             if (string.IsNullOrEmpty(query.Search))
             {
                 return results;
@@ -239,13 +237,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 
             var searchTerm = Uri.EscapeDataString(query.Search);
 
-            //select the url based on the selected api
             var requestUri = searchEnginesSuggestions[_selectedApi] + searchTerm;
-
-
-
-            //? $"https://www.google.com/complete/search?output=toolbar&q={searchTerm}"
-            //: $"https://www.google.com/complete/search?q={searchTerm}&client=gws-wiz";
 
             try
             {
@@ -292,9 +284,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                         }
                         return results;
                     }
-
                 }
-                    
             }
             catch (Exception ex)
             {
@@ -304,10 +294,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     Title = "ERROR: Failed to query Google Search Suggestions API",
                     SubTitle = ex.Message,
                     IcoPath = _errorIconPath,
-                    //report issue to GitHub
                     Action = action =>
                     {
-                        //copy the error message to the clipboard
                         System.Windows.Clipboard.SetText("Failed to query Google Search Suggestions API: " + ex.Message);
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
@@ -381,7 +369,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     },
                 });
             }
-
             return results;
         }
 
@@ -415,10 +402,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     }
                 }
             }
-
             return results;
         }
-
 
         private IEnumerable<Result> ParseEcosiaApiResponse(string response)
         {
@@ -437,10 +422,9 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                         {
                             Title = phrase,
                             SubTitle = "",
-                            IcoPath = _iconPath, // Assurez-vous que _iconPath est initialisé correctement
+                            IcoPath = _iconPath,
                             Action = action =>
                             {
-                                // Remplacez "searchEnginesUrls[_selectedSearchEngine]" par l'URL d'Ecosia si nécessaire
                                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                                 {
                                     FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(phrase)}",
@@ -456,23 +440,21 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             return results;
         }
 
-
         private async Task<IEnumerable<Result>> ParseBraveApiResponse(string response)
         {
-            var results = new List<Result>();
-                using (JsonDocument document = JsonDocument.Parse(response))
+           var results = new List<Result>();
+            using (JsonDocument document = JsonDocument.Parse(response))
+            {
+                JsonElement root = document.RootElement;
+                JsonElement searchResults = root[1];
+
+                foreach (JsonElement result in searchResults.EnumerateArray())
                 {
-                    JsonElement root = document.RootElement;
-                    JsonElement searchResults = root[1];
-
-                    foreach (JsonElement result in searchResults.EnumerateArray())
+                    if (result.TryGetProperty("is_entity", out JsonElement isEntity) && isEntity.GetBoolean())
                     {
-                        if (result.TryGetProperty("is_entity", out JsonElement isEntity) && isEntity.GetBoolean())
-                        {
-                            string title = result.GetProperty("name").GetString();
-                            string description = result.GetProperty("desc").GetString();
+                        string title = result.GetProperty("name").GetString();
+                        string description = result.GetProperty("desc").GetString();
 
-                        //test if url is present
                         if (result.TryGetProperty("img", out JsonElement urlElement))
                         {
                             string url = urlElement.GetString();
@@ -491,10 +473,9 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                                         FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
                                         UseShellExecute = true,
                                     });
-                                    return true;
+                                return true;
                                 },
                             });
-
                         }
                         else
                         {
@@ -514,36 +495,31 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                                 }, 
                             });
                         }
-
-                        }
-                        else
-                        {
-                            string title = result.GetProperty("q").GetString();
-
-                            results.Add(new Result
-                            {
-                                Title = title,
-                                SubTitle = "",
-                                IcoPath = _iconPath,
-                                Action = action =>
-                                {
-                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                                    {
-                                        FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
-                                        UseShellExecute = true,
-                                    });
-                                    return true;
-                                },
-                            });
-                        }
-
                     }
-            }
+                    else
+                    {
+                        string title = result.GetProperty("q").GetString();
 
+                        results.Add(new Result
+                        {
+                            Title = title,
+                            SubTitle = "",
+                            IcoPath = _iconPath,
+                            Action = action =>
+                            {
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(title)}",
+                                    UseShellExecute = true,
+                                });
+                                return true;
+                            },
+                        });
+                    }
+                }
+            }
             return results;
         }
-
-
 
         private IEnumerable<Result> ParseQwantApiResponse(string response)
         {
@@ -561,10 +537,9 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                         {
                             Title = value,
                             SubTitle = "",
-                            IcoPath = _iconPath, // Assurez-vous que _iconPath est initialisé correctement
+                            IcoPath = _iconPath,
                             Action = action =>
                             {
-                                // Remplacez "searchEnginesUrls[_selectedSearchEngine]" par l'URL de Qwant si nécessaire
                                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                                 {
                                     FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(value)}",
@@ -576,7 +551,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     }
                 }
             }
-
             return results;
         }
 
@@ -596,10 +570,9 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                         {
                             Title = phrase,
                             SubTitle = "",
-                            IcoPath = _iconPath, // Assurez-vous que _iconPath est initialisé correctement
+                            IcoPath = _iconPath,
                             Action = action =>
                             {
-                                // Remplacez "searchEnginesUrls[_selectedSearchEngine]" par l'URL de Swisscows si nécessaire
                                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                                 {
                                     FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(phrase)}",
@@ -611,14 +584,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     }
                 }
             }
-
             return results;
         }
-
-
-
-
-
 
         private IEnumerable<Result> ParseOldApiResponse(string response)
         {
@@ -648,7 +615,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     },
                 });
             }
-
             return results;
         }
 
@@ -670,10 +636,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     Title = "ERROR: Failed to parse Google Search Suggestions API response",
                     SubTitle = "JSON data not found",
                     IcoPath = _errorIconPath,
-                    //report issue to GitHub
                     Action = action =>
                     {
-                        //copy error to clipboard
                         System.Windows.Clipboard.SetText("Failed to parse Google Search Suggestions API response: JSON data not found");
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
@@ -769,10 +733,8 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     Title = "ERROR: Failed to parse Google Search Suggestions API response",
                     SubTitle = ex.Message,
                     IcoPath = _errorIconPath,
-                    //report issue to GitHub
                     Action = action =>
                     {
-                        //copy error to clipboard
                         System.Windows.Clipboard.SetText($"Failed to parse Google Search Suggestions API response: {ex.Message}");
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
@@ -783,7 +745,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                     }
                 });
             }
-
             return results;
         }
 
@@ -826,8 +787,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                         {
                             await stream.CopyToAsync(fileStream);
                         }
-
-                        // Convert the image to PNG if it is an SVG using SkiaSharp and delete the old image
                         if (streamFileTypeName == "image/svg+xml")
                         {
                             var byteArray = Encoding.ASCII.GetBytes(File.ReadAllText(randomFileName));
@@ -839,9 +798,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                                 bitmap.Save(file, ImageFormat.Png);
                                 randomFileName = file;
                             }
-
                         }
-
                         return randomFileName;
                     }
                     else
@@ -857,9 +814,6 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 return null;
             }
         }
-
-
-
 
         private void PurgeImagesFolder()
         {

@@ -1,17 +1,8 @@
-# this script uses [gsudo](https://github.com/gerardog/gsudo)
-
 Push-Location
 Set-Location $PSScriptRoot
 gsudo {
-    # stop PowerToys
     Get-Process -Name PowerToys* | Stop-Process
-
-    # wait
-    Start-Sleep -Seconds 5
-
-	#Start-Job { Stop-Process -Name PowerToys* } | Wait-Job > $null
-
-	# change this to your PowerToys installation path
+    Start-Sleep -Seconds 1
 	$ptPath = 'C:\Program Files\PowerToys'
 	$projectName = 'GoogleSearchSuggestions'
 	$safeProjectName = 'GoogleSearchSuggestions'
@@ -20,6 +11,8 @@ gsudo {
 	$files = @(
 		"Community.PowerToys.Run.Plugin.$safeProjectName.deps.json",
 		"Community.PowerToys.Run.Plugin.$safeProjectName.dll",
+        "ExCSS.dll",
+        "Svg.dll",
 		'plugin.json',
 		'Images'
 	)
@@ -30,5 +23,4 @@ gsudo {
 
 	& "$ptPath\PowerToys.exe"
 }
-
 Pop-Location

@@ -13,7 +13,6 @@
         <Authors></Authors>
         <RepositoryUrl></RepositoryUrl>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -48,7 +47,7 @@
         <Reference Include="Svg">
             <HintPath>.\Lib\Svg.dll</HintPath>
             <Private>True</Private>
-            </Reference>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
