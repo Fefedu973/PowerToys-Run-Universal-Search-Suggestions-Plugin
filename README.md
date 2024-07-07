@@ -1,14 +1,14 @@
-<h1 align="center"> Search Suggestion PowerToys Run Plugin</h1>
+<h1 align="center">Universal Search Suggestion PowerToys Run Plugin</h1>
 
 [<p align="center">]()
-![GitHub all releases](https://img.shields.io/github/downloads/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/total?style=for-the-badge)
+![GitHub all releases](https://img.shields.io/github/downloads/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin/total?style=for-the-badge)
 ![Discord](https://img.shields.io/discord/807892248935006208?style=for-the-badge)
-![GitHub](https://img.shields.io/github/license/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
-![GitHub repo size](https://img.shields.io/github/repo-size/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub repo size](https://img.shields.io/github/repo-size/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin?style=for-the-badge)
 [<p align="center">]()
-![GitHub forks](https://img.shields.io/github/forks/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
-![GitHub Repo stars](https://img.shields.io/github/stars/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/w/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub forks](https://img.shields.io/github/forks/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub Repo stars](https://img.shields.io/github/stars/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin?style=for-the-badge)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin?style=for-the-badge)
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## Installation
 
-- Download the [latest release](https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/releases/) by selecting the architecture that matches your machine: `x64` (more common) or `ARM64`
+- Download the [latest release](https://github.com/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin/releases/) by selecting the architecture that matches your machine: `x64` (more common) or `ARM64`
 - Close PowerToys (including from the system tray)
 - Extract the archive to `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins`
 - Open PowerToys
