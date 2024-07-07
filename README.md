@@ -1,4 +1,4 @@
-<h1 align="center"> Google Search Suggestion PowerToys Run Plugin</h1>
+<h1 align="center"> Search Suggestion PowerToys Run Plugin</h1>
 
 [<p align="center">]()
 ![GitHub all releases](https://img.shields.io/github/downloads/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/total?style=for-the-badge)
@@ -12,7 +12,7 @@
 
 ---
 
-[<p align="center">]()This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powertoys/run) plugin that adds google search suggestions when searching something.
+[<p align="center">]()This is a simple [PowerToys Run](https://docs.microsoft.com/en-us/windows/powertoys/run) plugin that adds search suggestions when searching something.
 
 ## Preview
 
