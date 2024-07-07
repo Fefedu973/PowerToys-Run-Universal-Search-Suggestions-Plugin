@@ -31,7 +31,7 @@
 
 ## Configuration
 
-- The default keyword for triggering the plugin is `s` but it should be triggered everytime by default.
+- The default keyword for triggering the plugin is `!s` but it should be triggered everytime by default.
 - You can change the search engine that you are redirected to.
 - - Supported browsers: Google, Bing, Yahoo, Baidu, Yandex, DuckDuckGo, Naver, Ask, Ecosia, Brave, Qwant, Startpage, Swisscows
 - You can set a custom search engine to be redirected to
