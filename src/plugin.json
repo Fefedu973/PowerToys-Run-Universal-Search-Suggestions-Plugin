@@ -5,7 +5,7 @@
     "IsGlobal": true,
     "Name": "Universal Search Suggestions",
     "Author": "Fefe_du_973",
-    "Version": "1.5.0",
+    "Version": "1.6.0",
     "Language": "csharp",
     "Website": "https://github.com/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin",
     "ExecuteFileName": "Community.PowerToys.Run.Plugin.UniversalSearchSuggestions.dll",

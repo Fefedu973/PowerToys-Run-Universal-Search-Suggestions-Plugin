@@ -150,7 +150,14 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
 
             var tag = JsonDocument.Parse(releaseInfo).RootElement.GetProperty("tag_name").GetString();
             var latestVersion = tag.Substring(1);
-            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            // Get the current version of the plugin by getting the version key from the plugin.json file in the plugin directory of the PowerToys installation directory
+            var jsonPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "PowerToys", "PowerToys Run", "Plugins", "UniversalSearchSuggestions", "plugin.json");
+            var json = File.ReadAllText(jsonPath);
+            var currentVersion = JsonDocument.Parse(json).RootElement.GetProperty("Version").GetString();
+            // Write in the console the current version and the latest version
+
+            Log.Warn(latestVersion, GetType());
+            Log.Warn(currentVersion, GetType());
 
             if (latestVersion != currentVersion)
             {
