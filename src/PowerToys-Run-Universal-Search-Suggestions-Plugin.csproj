@@ -4,8 +4,8 @@
         <useWPF>true</useWPF>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>Community.PowerToys.Run.Plugin.GoogleSearchSuggestions</AssemblyName>
-        <RootNamespace>Community.PowerToys.Run.Plugin.GoogleSearchSuggestions</RootNamespace>
+        <AssemblyName>Community.PowerToys.Run.Plugin.UniversalSearchSuggestions</AssemblyName>
+        <RootNamespace>Community.PowerToys.Run.Plugin.UniversalSearchSuggestions</RootNamespace>
         <Version>$([System.Text.RegularExpressions.Regex]::Match([System.IO.File]::ReadAllText('.\plugin.json'), '"Version": "(\S+)"').Groups[1].Value)</Version>
         <Platforms>x64;ARM64</Platforms>
         <Title></Title>

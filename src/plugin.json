@@ -1,15 +1,15 @@
 {
     "ID": "64861420-a0ca-442d-ae1c-35054e15a4b7",
-    "ActionKeyword": "s",
+    "ActionKeyword": "!s",
     "Disabled": false,
     "IsGlobal": true,
-    "Name": "Google Search Suggestions",
+    "Name": "Universal Search Suggestions",
     "Author": "Fefe_du_973",
-    "Version": "1.4.0",
+    "Version": "1.5.0",
     "Language": "csharp",
-    "Website": "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin",
-    "ExecuteFileName": "Community.PowerToys.Run.Plugin.GoogleSearchSuggestions.dll",
-    "IcoPathDark": "Images\\Google_Search_Suggestions_Plugin.dark.png",
-    "IcoPathLight": "Images\\Google_Search_Suggestions_Plugin.light.png",
+    "Website": "https://github.com/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin",
+    "ExecuteFileName": "Community.PowerToys.Run.Plugin.UniversalSearchSuggestions.dll",
+    "IcoPathDark": "Images\\Universal_Search_Suggestions_Plugin.dark.png",
+    "IcoPathLight": "Images\\Universal_Search_Suggestions_Plugin.light.png",
     "DynamicLoading": true
 }

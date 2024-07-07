@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35017.193
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PowerToys-Run-Google-Search-Suggestions-Plugin", "PowerToys-Run-Google-Search-Suggestions-Plugin.csproj", "{302A7084-E23D-4D77-821D-EA6E7F51CA59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerToys-Run-Universal-Search-Suggestions-Plugin", "PowerToys-Run-Universal-Search-Suggestions-Plugin.csproj", "{302A7084-E23D-4D77-821D-EA6E7F51CA59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

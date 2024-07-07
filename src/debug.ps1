@@ -4,8 +4,8 @@ gsudo {
     Get-Process -Name PowerToys* | Stop-Process
     Start-Sleep -Seconds 1
 	$ptPath = 'C:\Program Files\PowerToys'
-	$projectName = 'GoogleSearchSuggestions'
-	$safeProjectName = 'GoogleSearchSuggestions'
+	$projectName = 'UniversalSearchSuggestions'
+	$safeProjectName = 'UniversalSearchSuggestions'
 	$debug = '.\bin\x64\Debug\net8.0-windows'
 	$dest = "$env:LOCALAPPDATA\Microsoft\PowerToys\PowerToys Run\Plugins\$projectName"
 	$files = @(

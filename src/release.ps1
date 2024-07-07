@@ -1,11 +1,11 @@
 Push-Location
 Set-Location $PSScriptRoot
 
-$name = 'GoogleSearchSuggestions'
+$name = 'UniversalSearchSuggestions'
 $assembly = "Community.PowerToys.Run.Plugin.$name"
 $version = "v$((Get-Content ./plugin.json | ConvertFrom-Json).Version)"
 $archs = @('x64', 'arm64')
-$tempDir = './out/GoogleSearchSuggestions'
+$tempDir = './out/UniversalSearchSuggestions'
 
 git tag $version
 git push --tags
@@ -40,6 +40,6 @@ do {
 } while ($line -ne "")
 
 
-gh release create $version (Get-ChildItem ./out/*.zip) --title "Google Search Suggestions $version" --notes "Google Search Suggestions ${version}: `n$notes"
+gh release create $version (Get-ChildItem ./out/*.zip) --title "Universal Search Suggestions $version" --notes "Universal Search Suggestions ${version}: `n$notes"
 
 Pop-Location

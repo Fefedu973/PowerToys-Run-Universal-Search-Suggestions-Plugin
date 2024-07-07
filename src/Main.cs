@@ -12,8 +12,9 @@ using Svg;
 using System.Text;
 using System.Drawing.Imaging;
 using static Microsoft.PowerToys.Settings.UI.Library.PluginAdditionalOption;
+using System.Net;
 
-namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
+namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
 {
     public class Main : IPlugin, IPluginI18n, IContextMenu, ISettingProvider, IReloadable, IDisposable, IDelayedExecutionPlugin
     {
@@ -22,6 +23,10 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
         private const string CustomSearchEngine = nameof(CustomSearchEngine);
 
         private const string SettingSuggestionProvider = nameof(SettingSuggestionProvider);
+
+        private const string AlwaysShowAResult = nameof(AlwaysShowAResult);
+
+        private const string UpdatePluginSetting = nameof(UpdatePluginSetting);
 
         private string _customSearchEngineUrl;
 
@@ -111,13 +116,75 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
 
         private bool _disposed;
 
+        private bool _updatePlugin;
+
+        private bool _alwaysShowAResult;
+
+        private bool _preventMultipleUpdates = false;
+
         public string Name => Properties.Resources.plugin_name;
 
         public string Description => Properties.Resources.plugin_description;
 
         public static string PluginID => "64861420-a0ca-442d-ae1c-35054e15a4b7";
 
-        public IEnumerable<PluginAdditionalOption> AdditionalOptions => new List<PluginAdditionalOption>()
+        // Create an update method to update this plugin if there is a new release on the GitHub repository
+        public async void UpdatePlugin()
+        {
+            // Get the latest release from the GitHub making a webrequest api call to https://api.github.com/repos/Fefedu973/PowerToys-Run-Search-Suggestions-Plugin/releases/latest
+
+
+            using var proxyClientHandler = new HttpClientHandler
+            {
+                DefaultProxyCredentials = CredentialCache.DefaultCredentials,
+                Proxy = WebRequest.GetSystemWebProxy(),
+                PreAuthenticate = true,
+            };
+
+            using var getReleaseInfoClient = new HttpClient(proxyClientHandler);
+
+            // GitHub APIs require sending an user agent
+            // https://docs.github.com/rest/overview/resources-in-the-rest-api#user-agent-required
+            getReleaseInfoClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "PowerToys");
+            string releaseInfo = await getReleaseInfoClient.GetStringAsync("https://api.github.com/repos/Fefedu973/PowerToys-Run-Search-Suggestions-Plugin/releases/latest");
+
+            var tag = JsonDocument.Parse(releaseInfo).RootElement.GetProperty("tag_name").GetString();
+            var latestVersion = tag.Substring(1);
+            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+            if (latestVersion != currentVersion)
+            {
+
+                // Check if the updater is installed if yes, start the updater else download and install the updater and start it
+
+                var updaterPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "PowerToys", "PowerToys Run", "Plugins", "PowerToys Run Plugin Updater", "PowerToys Run Plugin Updater.exe");
+
+                if (!System.IO.File.Exists(updaterPath))
+                {
+                    string updater = await getReleaseInfoClient.GetStringAsync("https://api.github.com/repos/Fefedu973/PowerToys-Run-Plugin-Updater/releases/latest");
+                    //Download the asset
+                    var updaterUrl = JsonDocument.Parse(updater).RootElement.GetProperty("assets")[0].GetProperty("browser_download_url").GetString();
+                    var updaterDownloadPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "PowerToys", "PowerToys Run", "Plugins", "PowerToys Run Plugin Updater", "PowerToys Run Plugin Updater.exe");
+                    using (var updaterClient = new HttpClient())
+                    {
+                        var updaterStream = await updaterClient.GetStreamAsync(updaterUrl);
+                        using (var fileStream = new FileStream(updaterDownloadPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true))
+                        {
+                            await updaterStream.CopyToAsync(fileStream);
+                        }
+                    }
+                    System.Diagnostics.Process.Start(updaterDownloadPath);
+                }
+                else
+                {
+                    System.Diagnostics.Process.Start(updaterPath);
+                }
+            }
+
+        }
+
+
+    public IEnumerable<PluginAdditionalOption> AdditionalOptions => new List<PluginAdditionalOption>()
         {
             new PluginAdditionalOption()
             {
@@ -153,6 +220,20 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 {
                     return new KeyValuePair<string, string>(val, idx.ToString());
                 }).ToList()
+            },
+            new PluginAdditionalOption()
+            {
+                Key = AlwaysShowAResult,
+                DisplayDescription = "Always show a suggestion even if there are no results (this allows you to search with the selected search engine)",
+                DisplayLabel = "Always show a result",
+                Value = true,
+            },
+            new PluginAdditionalOption()
+            {
+                Key = UpdatePluginSetting,
+                DisplayDescription = "Update the plugin to the latest version",
+                DisplayLabel = "Automatically check for new updates",
+                Value = true,
             }
         };
 
@@ -165,6 +246,20 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             _customSearchEngineUrl = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == CustomSearchEngine)?.TextValue ?? string.Empty;
 
             searchEnginesUrls = searchEnginesUrls.Take(searchEnginesUrls.Length - 1).Concat(new string[] { _customSearchEngineUrl }).ToArray();
+
+            _alwaysShowAResult = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == AlwaysShowAResult)?.Value ?? true;
+
+            _updatePlugin = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == UpdatePluginSetting)?.Value ?? true;
+
+            if (_updatePlugin && !_preventMultipleUpdates)
+            {
+                _preventMultipleUpdates = true;
+                UpdatePlugin();
+            }
+            if (_updatePlugin == false)
+            {
+                _preventMultipleUpdates = false;
+            }
         }
 
         public List<ContextMenuResult> LoadContextMenus(Result selectedResult)
@@ -193,6 +288,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                 });
                 return results;
             }
+
             return results;
         }
 
@@ -220,6 +316,27 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             var task = QueryAsync(query, delayedExecution);
             task.Wait();
             results.AddRange(task.Result);
+
+            // If no results are found just add a result with the user query as title that will open the search engine with the user query
+            if (results.Count == 0 && _alwaysShowAResult)
+            {
+                results.Add(new Result
+                {
+                    Title = query.Search,
+                    SubTitle = "No suggestions found, search with the selected search engine",
+                    QueryTextDisplay = query.Search,
+                    IcoPath = _iconPath,
+                    Action = action =>
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = $"{searchEnginesUrls[_selectedSearchEngine]}{Uri.EscapeDataString(query.Search)}",
+                            UseShellExecute = true,
+                        });
+                        return true;
+                    },
+                });
+            }
 
             return results;
         }
@@ -288,18 +405,18 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             }
             catch (Exception ex)
             {
-                Log.Exception($"Failed to query Google Search Suggestions API: {ex.Message}", ex, GetType());
+                Log.Exception($"Failed to query the Search Suggestions API: {ex.Message}", ex, GetType());
                 results.Add(new Result
                 {
-                    Title = "ERROR: Failed to query Google Search Suggestions API",
+                    Title = "ERROR: Failed to query the Search Suggestions API",
                     SubTitle = ex.Message,
                     IcoPath = _errorIconPath,
                     Action = action =>
                     {
-                        System.Windows.Clipboard.SetText("Failed to query Google Search Suggestions API: " + ex.Message);
+                        System.Windows.Clipboard.SetText("Failed to query the Search Suggestions API: " + ex.Message);
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
-                            FileName = "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/issues/new",
+                            FileName = "https://github.com/Fefedu973/PowerToys-Run-Search-Suggestions-Plugin/issues/new",
                             UseShellExecute = true,
                         });
                         return true;
@@ -641,7 +758,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                         System.Windows.Clipboard.SetText("Failed to parse Google Search Suggestions API response: JSON data not found");
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
-                            FileName = "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/issues/new",
+                            FileName = "https://github.com/Fefedu973/PowerToys-Run-Search-Suggestions-Plugin/issues/new",
                             UseShellExecute = true,
                         });
                         return true;
@@ -738,7 +855,7 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
                         System.Windows.Clipboard.SetText($"Failed to parse Google Search Suggestions API response: {ex.Message}");
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
-                            FileName = "https://github.com/Fefedu973/PowerToys-Run-Google-Search-Suggestions-Plugin/issues/new",
+                            FileName = "https://github.com/Fefedu973/PowerToys-Run-Search-Suggestions-Plugin/issues/new",
                             UseShellExecute = true,
                         });
                         return true;
@@ -863,12 +980,12 @@ namespace Community.PowerToys.Run.Plugin.GoogleSearchSuggestions
             if (theme == Theme.Light || theme == Theme.HighContrastWhite)
             {
                 _iconPath = "Images/Search.light.png";
-                _errorIconPath = "Images/warn-light.png";
+                _errorIconPath = "Images/warn.light.png";
             }
             else
             {
                 _iconPath = "Images/Search.dark.png";
-                _errorIconPath = "Images/warn-dark.png";
+                _errorIconPath = "Images/warn.dark.png";
             }
         }
 

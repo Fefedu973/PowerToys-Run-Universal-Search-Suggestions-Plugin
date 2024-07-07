@@ -118,12 +118,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="plugin_description" xml:space="preserve">
-    <value>Google Search Suggestions plugin</value>
+    <value>Universal Search Suggestions plugin</value>
   </data>
   <data name="plugin_name" xml:space="preserve">
-    <value>Google Search Suggestions</value>
+    <value>Universal Search Suggestions</value>
   </data>
   <data name="plugin_setting" xml:space="preserve">
-    <value>Google Search Suggestions settings</value>
+    <value>Universal Search Suggestions settings</value>
   </data>
 </root>
