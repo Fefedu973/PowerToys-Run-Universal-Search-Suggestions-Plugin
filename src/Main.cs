@@ -1,22 +1,28 @@
 using ManagedCommon;
 using Microsoft.PowerToys.Settings.UI.Library;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Reflection;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Xml.Linq;
 using Wox.Plugin;
 using Wox.Plugin.Logger;
-using System.Reflection;
 using Svg;
-using System.Text;
 using System.Drawing.Imaging;
 using static Microsoft.PowerToys.Settings.UI.Library.PluginAdditionalOption;
-using System.Net;
+using System;
+using System.Collections.Generic;
+using Community.PowerToys.Run.Plugin.Update;
+using Wox.Infrastructure.Storage;
 
 namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
 {
-    public class Main : IPlugin, IPluginI18n, IContextMenu, ISettingProvider, IReloadable, IDisposable, IDelayedExecutionPlugin
+    public class Main : IPlugin, IPluginI18n, IContextMenu, ISettingProvider, IReloadable, ISavable, IDisposable, IDelayedExecutionPlugin
     {
         private const string SettingSelectedSearchEngine = nameof(SettingSelectedSearchEngine);
 
@@ -28,7 +34,17 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
 
         private const string UpdatePluginSetting = nameof(UpdatePluginSetting);
 
+        private PluginInitContext _context;
+        private string _iconPath;
+        private string _errorIconPath;
+        private bool _disposed;
+        private bool _updatePlugin;
+        private bool _alwaysShowAResult;
+        private bool _preventMultipleUpdates = false;
+
         private string _customSearchEngineUrl;
+        private int _selectedSearchEngine;
+        private int _selectedApi;
 
         private static readonly string[] searchEngines = new string[] {
             "Google",
@@ -104,94 +120,46 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
             "SwissCows",
         };
 
-        private int _selectedSearchEngine;
-
-        private int _selectedApi;
-
-        private PluginInitContext _context;
-
-        private string _iconPath;
-
-        private string _errorIconPath;
-
-        private bool _disposed;
-
-        private bool _updatePlugin;
-
-        private bool _alwaysShowAResult;
-
-        private bool _preventMultipleUpdates = false;
+        private PluginJsonStorage<UniversalSearchSuggestionsSettings> _storage;
+        private UniversalSearchSuggestionsSettings _settings;
+        private IPluginUpdateHandler _updater;
 
         public string Name => Properties.Resources.plugin_name;
-
         public string Description => Properties.Resources.plugin_description;
-
         public static string PluginID => "64861420-a0ca-442d-ae1c-35054e15a4b7";
 
-        // Create an update method to update this plugin if there is a new release on the GitHub repository
-        public async void UpdatePlugin()
+
+        public Main()
         {
-            // Get the latest release from the GitHub making a webrequest api call to https://api.github.com/repos/Fefedu973/PowerToys-Run-Search-Suggestions-Plugin/releases/latest
+            // 1) Load your plugin's settings from disk (JSON)
+            _storage = new PluginJsonStorage<UniversalSearchSuggestionsSettings>();
+            _settings = _storage.Load();
 
+            // 2) Create the update handler from the loaded settings
+            //    The PluginUpdateSettings object is inside your custom class
+            _updater = new PluginUpdateHandler(_settings.Update);
 
-            using var proxyClientHandler = new HttpClientHandler
-            {
-                DefaultProxyCredentials = CredentialCache.DefaultCredentials,
-                Proxy = WebRequest.GetSystemWebProxy(),
-                PreAuthenticate = true,
-            };
-
-            using var getReleaseInfoClient = new HttpClient(proxyClientHandler);
-
-            // GitHub APIs require sending an user agent
-            // https://docs.github.com/rest/overview/resources-in-the-rest-api#user-agent-required
-            getReleaseInfoClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "PowerToys");
-            string releaseInfo = await getReleaseInfoClient.GetStringAsync("https://api.github.com/repos/Fefedu973/PowerToys-Run-Search-Suggestions-Plugin/releases/latest");
-
-            var tag = JsonDocument.Parse(releaseInfo).RootElement.GetProperty("tag_name").GetString();
-            var latestVersion = tag.Substring(1);
-            // Get the current version of the plugin by getting the version key from the plugin.json file in the plugin directory of the PowerToys installation directory
-            var jsonPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "PowerToys", "PowerToys Run", "Plugins", "UniversalSearchSuggestions", "plugin.json");
-            var json = File.ReadAllText(jsonPath);
-            var currentVersion = JsonDocument.Parse(json).RootElement.GetProperty("Version").GetString();
-            // Write in the console the current version and the latest version
-
-            Log.Warn(latestVersion, GetType());
-            Log.Warn(currentVersion, GetType());
-
-            if (latestVersion != currentVersion)
-            {
-
-                // Check if the updater is installed if yes, start the updater else download and install the updater and start it
-
-                var updaterPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "PowerToys", "PowerToys Run", "Plugins", "PowerToys Run Plugin Updater", "PowerToys Run Plugin Updater.exe");
-
-                if (!System.IO.File.Exists(updaterPath))
-                {
-                    string updater = await getReleaseInfoClient.GetStringAsync("https://api.github.com/repos/Fefedu973/PowerToys-Run-Plugin-Updater/releases/latest");
-                    //Download the asset
-                    var updaterUrl = JsonDocument.Parse(updater).RootElement.GetProperty("assets")[0].GetProperty("browser_download_url").GetString();
-                    var updaterDownloadPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "PowerToys", "PowerToys Run", "Plugins", "PowerToys Run Plugin Updater", "PowerToys Run Plugin Updater.exe");
-                    using (var updaterClient = new HttpClient())
-                    {
-                        var updaterStream = await updaterClient.GetStreamAsync(updaterUrl);
-                        using (var fileStream = new FileStream(updaterDownloadPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true))
-                        {
-                            await updaterStream.CopyToAsync(fileStream);
-                        }
-                    }
-                    System.Diagnostics.Process.Start(updaterDownloadPath);
-                }
-                else
-                {
-                    System.Diagnostics.Process.Start(updaterPath);
-                }
-            }
-
+            // 3) Subscribe to update events if you want to show logs or user notifications
+            _updater.UpdateInstalling += OnUpdateInstalling;
+            _updater.UpdateInstalled += OnUpdateInstalled;
+            _updater.UpdateSkipped += OnUpdateSkipped;
         }
 
+        // -----------------------------------------------
+        // INIT
+        // -----------------------------------------------
+        public void Init(PluginInitContext context)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _context.API.ThemeChanged += OnThemeChanged;
+            UpdateIconPath(_context.API.GetCurrentTheme());
 
-    public IEnumerable<PluginAdditionalOption> AdditionalOptions => new List<PluginAdditionalOption>()
+            // Initialize the PluginUpdateHandler so it can 
+            // check your plugin.json / GitHub Releases, etc.
+            _updater.Init(_context);
+
+        }
+        public IEnumerable<PluginAdditionalOption> AdditionalOptions => new List<PluginAdditionalOption>()
         {
             new PluginAdditionalOption()
             {
@@ -246,32 +214,48 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
 
         public void UpdateSettings(PowerLauncherPluginSettings settings)
         {
-            _selectedApi = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSuggestionProvider)?.ComboBoxValue ?? 0;
+            if (settings == null) return;
 
-            _selectedSearchEngine = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSelectedSearchEngine)?.ComboBoxValue ?? 0;
+            _selectedApi = settings.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSuggestionProvider)?.ComboBoxValue ?? 0;
+            _selectedSearchEngine = settings.AdditionalOptions?.FirstOrDefault(x => x.Key == SettingSelectedSearchEngine)?.ComboBoxValue ?? 0;
+            _customSearchEngineUrl = settings.AdditionalOptions?.FirstOrDefault(x => x.Key == CustomSearchEngine)?.TextValue ?? string.Empty;
+            _alwaysShowAResult = settings.AdditionalOptions?.FirstOrDefault(x => x.Key == AlwaysShowAResult)?.Value ?? true;
+            _updatePlugin = settings.AdditionalOptions?.FirstOrDefault(x => x.Key == UpdatePluginSetting)?.Value ?? true;
 
-            _customSearchEngineUrl = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == CustomSearchEngine)?.TextValue ?? string.Empty;
+            // Let the last item in searchEnginesUrls be the user’s custom engine
+            searchEnginesUrls = searchEnginesUrls
+                .Take(searchEnginesUrls.Length - 1)
+                .Concat(new string[] { _customSearchEngineUrl })
+                .ToArray();
 
-            searchEnginesUrls = searchEnginesUrls.Take(searchEnginesUrls.Length - 1).Concat(new string[] { _customSearchEngineUrl }).ToArray();
-
-            _alwaysShowAResult = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == AlwaysShowAResult)?.Value ?? true;
-
-            _updatePlugin = settings?.AdditionalOptions?.FirstOrDefault(x => x.Key == UpdatePluginSetting)?.Value ?? true;
-
+            // If user re-enabled updates, we attempt only once to prevent repeated checks
             if (_updatePlugin && !_preventMultipleUpdates)
             {
                 _preventMultipleUpdates = true;
-                UpdatePlugin();
             }
-            if (_updatePlugin == false)
+            else if (!_updatePlugin)
             {
                 _preventMultipleUpdates = false;
             }
+
+            Save();
+        }
+
+        public void Save()
+        {
+            _storage.Save();
         }
 
         public List<ContextMenuResult> LoadContextMenus(Result selectedResult)
         {
-            return new List<ContextMenuResult>(0);
+            var updaterMenus = _updater.GetContextMenuResults(selectedResult);
+            if (updaterMenus.Count > 0)
+            {
+                return updaterMenus; // It's the update item
+            }
+
+            // Otherwise, return your normal context menus if any
+            return new List<ContextMenuResult>();
         }
 
         public List<Result> Query(Query query)
@@ -279,6 +263,12 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
             ArgumentNullException.ThrowIfNull(query);
 
             var results = new List<Result>();
+
+            // 1) If an update is available, show the "Update available" result(s).
+            if (_updater.IsUpdateAvailable())
+            {
+                results.AddRange(_updater.GetResults());
+            }
 
             if (string.IsNullOrEmpty(query.Search))
             {
@@ -288,10 +278,7 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
                     SubTitle = "Powered by " + Description + " made by Fefe_du_973",
                     QueryTextDisplay = string.Empty,
                     IcoPath = _iconPath,
-                    Action = action =>
-                    {
-                        return true;
-                    },
+                    Action = _ => true,
                 });
                 return results;
             }
@@ -304,6 +291,11 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
             ArgumentNullException.ThrowIfNull(query);
 
             var results = new List<Result>();
+
+            if (_updater.IsUpdateAvailable())
+            {
+                results.AddRange(_updater.GetResults());
+            }
 
             if (string.IsNullOrEmpty(query.Search))
             {
@@ -347,6 +339,30 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
 
             return results;
         }
+
+        private void OnUpdateInstalling(object sender, PluginUpdateEventArgs e)
+        {
+            Log.Info("UpdateInstalling: " + e.Version, GetType());
+            // This fires when user starts the update from the "Update available" result or context menu
+        }
+
+        private void OnUpdateInstalled(object sender, PluginUpdateEventArgs e)
+        {
+            Log.Info("UpdateInstalled: " + e.Version, GetType());
+            // By the time this fires, the user has restarted PowerToys and reloaded the plugin
+            _context.API.ShowNotification($"{Name} {e.Version}", "Update installed");
+        }
+
+        private void OnUpdateSkipped(object sender, PluginUpdateEventArgs e)
+        {
+            Log.Info("UpdateSkipped: " + e.Version, GetType());
+            // User decided to skip this version
+            Save();
+            // Optionally refresh the PT Run UI
+            _context?.API.ChangeQuery(_context.CurrentPluginMetadata.ActionKeyword, true);
+        }
+
+
 
         public async Task<List<Result>> QueryAsync(Query query, bool delayedExecution)
         {
@@ -960,13 +976,6 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
             }
         }
 
-        public void Init(PluginInitContext context)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _context.API.ThemeChanged += OnThemeChanged;
-            UpdateIconPath(_context.API.GetCurrentTheme());
-        }
-
         public string GetTranslatedPluginTitle()
         {
             return Properties.Resources.plugin_name;
@@ -1021,13 +1030,35 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
         {
             if (!_disposed && disposing)
             {
-                if (_context != null && _context.API != null)
+                if (_context?.API != null)
                 {
                     _context.API.ThemeChanged -= OnThemeChanged;
                 }
 
+                // Dispose of update handler
+                _updater.Dispose();
+
                 _disposed = true;
             }
         }
+    }
+
+    // ==============================================
+    // NESTED CLASS: plugin settings 
+    // ==============================================
+    // You can either put this in a separate .cs file or keep it here for simplicity
+    public class UniversalSearchSuggestionsSettings
+    {
+        // This is the crucial property from the Community.PowerToys.Run.Plugin.Update library
+        // that stores whether updates are enabled/skipped, the version, etc.
+        public PluginUpdateSettings Update { get; set; } = new PluginUpdateSettings
+        {
+            // This influences how high the "Update available" result is displayed in the search.
+            ResultScore = 100
+        };
+
+        // If you want, you can store your other plugin's 
+        // user preferences in here as well. Or keep them in Main.
+        // This class can remain minimal if you prefer.
     }
 }

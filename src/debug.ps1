@@ -6,11 +6,13 @@ gsudo {
 	$ptPath = 'C:\Program Files\PowerToys'
 	$projectName = 'UniversalSearchSuggestions'
 	$safeProjectName = 'UniversalSearchSuggestions'
-	$debug = '.\bin\x64\Debug\net8.0-windows'
+	$debug = '.\bin\x64\Debug\net9.0-windows'
 	$dest = "$env:LOCALAPPDATA\Microsoft\PowerToys\PowerToys Run\Plugins\$projectName"
 	$files = @(
 		"Community.PowerToys.Run.Plugin.$safeProjectName.deps.json",
 		"Community.PowerToys.Run.Plugin.$safeProjectName.dll",
+        "Community.PowerToys.Run.Plugin.Update.dll",
+        "update.ps1",    
         "ExCSS.dll",
         "Svg.dll",
 		'plugin.json',

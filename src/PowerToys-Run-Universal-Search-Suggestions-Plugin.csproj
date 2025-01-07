@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net9.0-windows</TargetFramework>
         <useWPF>true</useWPF>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -8,12 +8,14 @@
         <RootNamespace>Community.PowerToys.Run.Plugin.UniversalSearchSuggestions</RootNamespace>
         <Version>$([System.Text.RegularExpressions.Regex]::Match([System.IO.File]::ReadAllText('.\plugin.json'), '"Version": "(\S+)"').Groups[1].Value)</Version>
         <Platforms>x64;ARM64</Platforms>
+        <PlatformTarget>$(Platform)</PlatformTarget>
         <Title></Title>
         <Product></Product>
         <Authors></Authors>
         <RepositoryUrl></RepositoryUrl>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AssemblyVersion>1.0.6</AssemblyVersion>
+        <OutputType>Library</OutputType>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -67,6 +69,7 @@
         <None Include="plugin.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <PackageReference Include="Community.PowerToys.Run.Plugin.Update" Version="0.2.0" />
         <PackageReference Include="Svg" Version="3.4.7" />
         <None Update="Images\*.png">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
