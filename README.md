@@ -29,6 +29,10 @@
 - Extract the archive to `%LOCALAPPDATA%\Microsoft\PowerToys\PowerToys Run\Plugins`
 - Open PowerToys
 
+## Usage
+
+- Just type the trigger keyword (`!s` by default) and start seaching, results will show up
+
 ## Configuration
 
 - The default keyword for triggering the plugin is `!s` but it should be triggered everytime by default.
