@@ -1,11 +1,11 @@
 {
-    "ID": "64861420-a0ca-442d-ae1c-35054e15a4b7",
+    "ID": "64861420A0CA442DAE1C35054E15A4B7",
     "ActionKeyword": "!s",
     "Disabled": false,
     "IsGlobal": true,
     "Name": "UniversalSearchSuggestions",
     "Author": "Fefe_du_973",
-    "Version": "1.7.2",
+    "Version": "1.7.3",
     "Language": "csharp",
     "Website": "https://github.com/Fefedu973/PowerToys-Run-Universal-Search-Suggestions-Plugin",
     "ExecuteFileName": "Community.PowerToys.Run.Plugin.UniversalSearchSuggestions.dll",

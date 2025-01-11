@@ -78,4 +78,8 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="out\" />
+    </ItemGroup>
+
 </Project>

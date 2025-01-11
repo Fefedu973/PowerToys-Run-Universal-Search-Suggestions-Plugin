@@ -126,7 +126,7 @@ namespace Community.PowerToys.Run.Plugin.UniversalSearchSuggestions
 
         public string Name => Properties.Resources.plugin_name;
         public string Description => Properties.Resources.plugin_description;
-        public static string PluginID => "64861420-a0ca-442d-ae1c-35054e15a4b7";
+        public static string PluginID => "64861420A0CA442DAE1C35054E15A4B7";
 
 
         public Main()
