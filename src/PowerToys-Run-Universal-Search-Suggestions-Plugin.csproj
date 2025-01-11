@@ -69,8 +69,10 @@
         <None Include="plugin.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <PackageReference Include="Community.PowerToys.Run.Plugin.Update" Version="0.2.0" />
+        <PackageReference Include="Community.PowerToys.Run.Plugin.Update" Version="0.3.0" />
+        <PackageReference Include="ExCSS" Version="4.3.0" />
         <PackageReference Include="Svg" Version="3.4.7" />
+        <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
         <None Update="Images\*.png">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
